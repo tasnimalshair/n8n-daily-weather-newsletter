@@ -1,96 +1,61 @@
 {
-  "name": "DailyWeatherApp",
+  "name": "WeatherApp_workflow",
   "nodes": [
-    {
-      "parameters": {
-        "chatId": "1206553714",
-        "text": "=🌦️ *Glasgow Daily Weather Report*\n\n📅 *Date & Time:* {{ $json.reportTime }}\n\n🌡️ *Current Conditions*\n• Temperature: {{ $json.temperatureC }}°C\n• Feels like: {{ $json.feelsLikeC }}°C\n• Humidity: {{ $json.humidityPercent }}%\n• Precipitation: {{ $json.precipitationMm }} mm\n• Wind speed: {{ $json.windSpeedKmh }} km/h\n\n🌤️ *Today's Forecast*\n• Highest temperature: {{ $json.maxTemperatureC }}°C\n• Lowest temperature: {{ $json.minTemperatureC }}°C\n• Chance of precipitation: {{ $json.precipitationProbabilityPercent }}%\n\n🌅 *Sunrise:* {{ $json.sunrise }}\n🌇 *Sunset:* {{ $json.sunset }}",
-        "additionalFields": {
-          "appendAttribution": false
-        }
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        656,
-        0
-      ],
-      "id": "280e28fa-ad52-4181-b2b0-3bb6907dcd00",
-      "name": "Send a text message",
-      "webhookId": "0b335b05-a32f-42a9-83c2-45e924699024",
-      "credentials": {
-        "telegramApi": {
-          "id": "M7dkX8xPUxn4wlZj",
-          "name": "Telegram account 3"
-        }
-      }
-    },
     {
       "parameters": {},
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        32,
-        0
+        -176,
+        16
       ],
-      "id": "ab7e9198-4e0f-4081-9a37-052837b58402",
+      "id": "f0fe64d4-8b89-448f-8e67-3b61ae029070",
       "name": "When clicking ‘Execute workflow’"
     },
     {
       "parameters": {
-        "jsCode": "\nconst input = $input.first().json;\nconst data = Array.isArray(input) ? input[0] : input;\n\nif (!data?.current || !data?.daily) {\n  throw new Error(\"Missing current or daily weather data.\");\n}\n\n// Format date and time, e.g. 25 Oct 2026, 09:00 AM\nfunction formatDateTime(dateTime) {\n  return new Date(dateTime).toLocaleString(\"en-GB\", {\n    day: \"2-digit\",\n    month: \"short\",\n    year: \"numeric\",\n    hour: \"2-digit\",\n    minute: \"2-digit\",\n    hour12: true,\n    timeZone: \"Europe/London\",\n  });\n}\n\n// Format date only, e.g. 25 Oct 2026\nfunction formatDate(dateTime) {\n  return new Date(dateTime).toLocaleDateString(\"en-GB\", {\n    day: \"2-digit\",\n    month: \"short\",\n    year: \"numeric\",\n    timeZone: \"Europe/London\",\n  });\n}\n\n// Format time only, e.g. 07:08 AM\nfunction formatTime(dateTime) {\n  return new Date(dateTime).toLocaleTimeString(\"en-GB\", {\n    hour: \"2-digit\",\n    minute: \"2-digit\",\n    hour12: true,\n    timeZone: \"Europe/London\",\n  });\n}\n\nconst weatherReport = {\n  city: \"Glasgow\",\n\n  // Report date and time\n  reportTime: formatDateTime(data.current.time),\n\n  // Current weather conditions\n  temperatureC: data.current.temperature_2m,\n  feelsLikeC: data.current.apparent_temperature,\n  humidityPercent: data.current.relative_humidity_2m,\n  precipitationMm: data.current.precipitation,\n  windSpeedKmh: data.current.wind_speed_10m,\n\n  // Today's forecast\n  forecastDate: formatDate(data.daily.time[0]),\n  maxTemperatureC: data.daily.temperature_2m_max[0],\n  minTemperatureC: data.daily.temperature_2m_min[0],\n  precipitationProbabilityPercent:\n    data.daily.precipitation_probability_max[0],\n\n  // Sunrise and sunset\n  sunrise: formatTime(data.daily.sunrise[0]),\n  sunset: formatTime(data.daily.sunset[0]),\n};\n\nreturn [\n  {\n    json: weatherReport,\n  },\n];\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        448,
-        0
-      ],
-      "id": "be4a9488-7ad6-4407-8fdd-bd34ae65c898",
-      "name": "Data Consolidation"
-    },
-    {
-      "parameters": {
-        "url": "https://api.open-meteo.com/v1/forecast",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "latitude",
-              "value": "55.8642"
-            },
-            {
-              "name": "longitude",
-              "value": "-4.2518"
-            },
-            {
-              "name": "current",
-              "value": "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m"
-            },
-            {
-              "name": "daily",
-              "value": "temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset"
-            },
-            {
-              "name": "timezone",
-              "value": "Europe/London"
-            },
-            {
-              "name": "forecast_days",
-              "value": "1"
-            }
-          ]
-        },
+        "url": "https://api.open-meteo.com/v1/forecast?latitude=31.52&longitude=34.45&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m&hourly=temperature_2m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        240,
-        0
+        48,
+        16
       ],
-      "id": "32131e6d-9bcd-438b-a338-97598270f22b",
-      "name": "HTTP Request-meteo"
+      "id": "f6e967fa-9c2a-4249-8143-29d202169436",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst weather = $input.first().json;\n\n// Current weather\nconst current = weather.current;\n\n// Today's forecast\nconst today = current.time.split(\"T\")[0];\nconst dailyIndex = weather.daily.time.indexOf(today);\n\n// Calculate today's maximum rain probability\nconst todayHourlyIndexes = weather.hourly.time\n  .map((time, index) => time.startsWith(today) ? index : -1)\n  .filter(index => index !== -1);\n\nconst rainProbabilities = todayHourlyIndexes\n  .map(index => weather.hourly.precipitation_probability[index])\n  .filter(value => value !== null && value !== undefined);\n\nconst maxRainChance = rainProbabilities.length\n  ? Math.max(...rainProbabilities)\n  : null;\n\nreturn [\n  {\n    json: {\n      location: \"Al-Nasr, Gaza\",\n      date: today,\n      timezone: weather.timezone,\n\n      currentWeather: {\n        temperature: current.temperature_2m,\n        feelsLike: current.apparent_temperature,\n        humidity: current.relative_humidity_2m,\n        windSpeed: current.wind_speed_10m,\n        precipitation: current.precipitation,\n        observationTime: current.time\n      },\n\n      todayForecast: {\n        maxTemperature: weather.daily.temperature_2m_max[dailyIndex],\n        minTemperature: weather.daily.temperature_2m_min[dailyIndex],\n        rainProbability: maxRainChance,\n        sunrise: weather.daily.sunrise[dailyIndex],\n        sunset: weather.daily.sunset[dailyIndex]\n      },\n\n      units: {\n        temperature: \"°C\",\n        humidity: \"%\",\n        windSpeed: \"km/h\",\n        precipitation: \"mm\",\n        rainProbability: \"%\"\n      }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        16
+      ],
+      "id": "3190049a-2268-445f-bfbc-a5d56d0d36dd",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL_ADDRESS",
+        "subject": "=🌤️ Daily Weather Update – Al-Nasr, Gaza | {{ $json.date }}",
+        "message": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: auto; color: #263238; background: #f5f8fc; padding: 24px; border-radius: 12px;\">\n\n  <div style=\"text-align: center; padding: 20px; background: #173b57; color: white; border-radius: 10px;\">\n    <h1 style=\"margin: 0; font-size: 24px;\">🌤️ Daily Weather Update</h1>\n    <p style=\"margin: 8px 0 0;\">Al-Nasr, Gaza</p>\n    <p style=\"margin: 5px 0 0; font-size: 13px;\">\n      {{ $json.date }} \n    </p>\n  </div>\n\n  <div style=\"background: white; padding: 20px; margin-top: 18px; border-radius: 10px;\">\n    <h2 style=\"color: #173b57; font-size: 18px;\">🌡️ Current Weather</h2>\n    <h1 style=\"font-size: 38px; margin: 10px 0; color: #173b57;\">\n      {{ $json.currentWeather.temperature }}°C\n    </h1>\n    <p>Feels like: {{ $json.currentWeather.feelsLike }}°C</p>\n    <p>Humidity: {{ $json.currentWeather.humidity }}%</p>\n    <p>Wind Speed: {{ $json.currentWeather.windSpeed }} km/h</p>\n    <p>Precipitation: {{ $json.currentWeather.precipitation }} mm</p>\n    <p style=\"font-size: 12px; color: #78909c;\">\n      Last updated: {{ $json.currentWeather.observationTime }}\n    </p>\n  </div>\n\n  <div style=\"background: white; padding: 20px; margin-top: 18px; border-radius: 10px;\">\n    <h2 style=\"color: #173b57; font-size: 18px;\">📅 Today's Forecast</h2>\n    <p>🌡️ Maximum Temperature: {{ $json.todayForecast.maxTemperature }}°C</p>\n    <p>❄️ Minimum Temperature: {{ $json.todayForecast.minTemperature }}°C</p>\n    <p>🌧️ Rain Probability: {{ $json.todayForecast.rainProbability }}%</p>\n    <p>🌅 Sunrise: {{ $json.todayForecast.sunrise }}</p>\n    <p>🌇 Sunset: {{ $json.todayForecast.sunset }}</p>\n  </div>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        496,
+        16
+      ],
+      "id": "097d9f9c-ae34-4c7f-b820-e0cfa3a2c94a",
+      "name": "Send a message"
     }
   ],
   "pinData": {},
@@ -99,29 +64,29 @@
       "main": [
         [
           {
-            "node": "HTTP Request-meteo",
+            "node": "HTTP Request",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Data Consolidation": {
+    "HTTP Request": {
       "main": [
         [
           {
-            "node": "Send a text message",
+            "node": "Code in JavaScript",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HTTP Request-meteo": {
+    "Code in JavaScript": {
       "main": [
         [
           {
-            "node": "Data Consolidation",
+            "node": "Send a message",
             "type": "main",
             "index": 0
           }
@@ -135,12 +100,9 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "e9663195-d945-4d66-bb0a-0d1ace58a68c",
   "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "1762b09f3b0deb78af55c98c154f566ec611617ddd7d8c2d0ec308d4c307fc51"
+    "templateCredsSetupCompleted": true
   },
   "nodeGroups": [],
-  "id": "ujxAVCglYFAMFiEj",
   "tags": []
 }
