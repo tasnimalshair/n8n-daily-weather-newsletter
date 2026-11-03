@@ -1,0 +1,146 @@
+{
+  "name": "DailyWeatherApp",
+  "nodes": [
+    {
+      "parameters": {
+        "chatId": "1206553714",
+        "text": "=🌦️ *Glasgow Daily Weather Report*\n\n📅 *Date & Time:* {{ $json.reportTime }}\n\n🌡️ *Current Conditions*\n• Temperature: {{ $json.temperatureC }}°C\n• Feels like: {{ $json.feelsLikeC }}°C\n• Humidity: {{ $json.humidityPercent }}%\n• Precipitation: {{ $json.precipitationMm }} mm\n• Wind speed: {{ $json.windSpeedKmh }} km/h\n\n🌤️ *Today's Forecast*\n• Highest temperature: {{ $json.maxTemperatureC }}°C\n• Lowest temperature: {{ $json.minTemperatureC }}°C\n• Chance of precipitation: {{ $json.precipitationProbabilityPercent }}%\n\n🌅 *Sunrise:* {{ $json.sunrise }}\n🌇 *Sunset:* {{ $json.sunset }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        656,
+        0
+      ],
+      "id": "280e28fa-ad52-4181-b2b0-3bb6907dcd00",
+      "name": "Send a text message",
+      "webhookId": "0b335b05-a32f-42a9-83c2-45e924699024",
+      "credentials": {
+        "telegramApi": {
+          "id": "M7dkX8xPUxn4wlZj",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        32,
+        0
+      ],
+      "id": "ab7e9198-4e0f-4081-9a37-052837b58402",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst input = $input.first().json;\nconst data = Array.isArray(input) ? input[0] : input;\n\nif (!data?.current || !data?.daily) {\n  throw new Error(\"Missing current or daily weather data.\");\n}\n\n// Format date and time, e.g. 25 Oct 2026, 09:00 AM\nfunction formatDateTime(dateTime) {\n  return new Date(dateTime).toLocaleString(\"en-GB\", {\n    day: \"2-digit\",\n    month: \"short\",\n    year: \"numeric\",\n    hour: \"2-digit\",\n    minute: \"2-digit\",\n    hour12: true,\n    timeZone: \"Europe/London\",\n  });\n}\n\n// Format date only, e.g. 25 Oct 2026\nfunction formatDate(dateTime) {\n  return new Date(dateTime).toLocaleDateString(\"en-GB\", {\n    day: \"2-digit\",\n    month: \"short\",\n    year: \"numeric\",\n    timeZone: \"Europe/London\",\n  });\n}\n\n// Format time only, e.g. 07:08 AM\nfunction formatTime(dateTime) {\n  return new Date(dateTime).toLocaleTimeString(\"en-GB\", {\n    hour: \"2-digit\",\n    minute: \"2-digit\",\n    hour12: true,\n    timeZone: \"Europe/London\",\n  });\n}\n\nconst weatherReport = {\n  city: \"Glasgow\",\n\n  // Report date and time\n  reportTime: formatDateTime(data.current.time),\n\n  // Current weather conditions\n  temperatureC: data.current.temperature_2m,\n  feelsLikeC: data.current.apparent_temperature,\n  humidityPercent: data.current.relative_humidity_2m,\n  precipitationMm: data.current.precipitation,\n  windSpeedKmh: data.current.wind_speed_10m,\n\n  // Today's forecast\n  forecastDate: formatDate(data.daily.time[0]),\n  maxTemperatureC: data.daily.temperature_2m_max[0],\n  minTemperatureC: data.daily.temperature_2m_min[0],\n  precipitationProbabilityPercent:\n    data.daily.precipitation_probability_max[0],\n\n  // Sunrise and sunset\n  sunrise: formatTime(data.daily.sunrise[0]),\n  sunset: formatTime(data.daily.sunset[0]),\n};\n\nreturn [\n  {\n    json: weatherReport,\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "be4a9488-7ad6-4407-8fdd-bd34ae65c898",
+      "name": "Data Consolidation"
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "55.8642"
+            },
+            {
+              "name": "longitude",
+              "value": "-4.2518"
+            },
+            {
+              "name": "current",
+              "value": "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m"
+            },
+            {
+              "name": "daily",
+              "value": "temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset"
+            },
+            {
+              "name": "timezone",
+              "value": "Europe/London"
+            },
+            {
+              "name": "forecast_days",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        240,
+        0
+      ],
+      "id": "32131e6d-9bcd-438b-a338-97598270f22b",
+      "name": "HTTP Request-meteo"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request-meteo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Consolidation": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request-meteo": {
+      "main": [
+        [
+          {
+            "node": "Data Consolidation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "e9663195-d945-4d66-bb0a-0d1ace58a68c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1762b09f3b0deb78af55c98c154f566ec611617ddd7d8c2d0ec308d4c307fc51"
+  },
+  "nodeGroups": [],
+  "id": "ujxAVCglYFAMFiEj",
+  "tags": []
+}
